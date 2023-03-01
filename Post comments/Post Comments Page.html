@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+  <title>Post comments</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+
+    ul {
+      list-style: none;
+    }
+
+    .w {
+      width: 900px;
+      margin: 0 auto;
+    }
+
+    .controls textarea {
+      width: 878px;
+      height: 100px;
+      resize: none;
+      border-radius: 10px;
+      outline: none;
+      padding-left: 20px;
+      padding-top: 10px;
+      font-size: 18px;
+    }
+
+    .controls {
+      overflow: hidden;
+    }
+
+    .controls div {
+      float: right;
+    }
+
+    .controls div span {
+      color: #666;
+    }
+
+    .controls div .useCount {
+      color: red;
+    }
+
+    .controls div button {
+      width: 100px;
+      outline: none;
+      border: none;
+      background: rgb(0, 132, 255);
+      height: 30px;
+      cursor: pointer;
+      color: #fff;
+      font: bold 14px 'Times NewRomen';
+      transition: all 0.5s;
+    }
+
+    .controls div button:hover {
+      background: rgb(0, 225, 255);
+    }
+
+    .controls div button:disabled {
+      background: rgba(0, 225, 255, 0.5);
+    }
+
+    .contentList {
+      margin-top: 50px;
+    }
+
+    .contentList li {
+      padding: 20px 0;
+      border-bottom: 1px dashed #ccc;
+      position: relative;
+    }
+
+    .contentList li .info {
+      position: relative;
+    }
+
+    .contentList li .info span {
+      position: absolute;
+      top: 15px;
+      left: 100px;
+      font: bold 16px 'Times NewRomen';
+    }
+
+    .contentList li .info p {
+      position: absolute;
+      top: 40px;
+      left: 100px;
+      color: #aaa;
+      font-size: 12px;
+    }
+
+    .contentList img {
+      width: 80px;
+      border-radius: 50%;
+    }
+
+    .contentList li .content {
+      padding-left: 100px;
+      color: #666;
+      word-break: break-all;
+    }
+
+    .contentList li .the_del {
+      position: absolute;
+      right: 0;
+      top: 0;
+      font-size: 28px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="w">
+    <!-- operation page -->
+    <div class="controls">
+      <img src="./images/9.6/tip.png" alt="" /><br />
+      <!-- maxlength to limit the length of content -->
+      <textarea placeholder="Share your experience here..." id="area" cols="30" rows="10" maxlength="200"></textarea>
+      <div>
+        <span class="useCount" id="useCount">0</span>
+        <span>/</span>
+        <span>200</span>
+        <button id="post">Post</button>
+      </div>
+    </div>
+    <!-- BBS content list -->
+    <div class="contentList">
+      <ul id="list"></ul>
+    </div>
+  </div>
+
+  <!--  hidden elements, invisible now -->
+  <li hidden>
+    <div class="info">
+      <img class="userpic" src="./images/9.6/03.jpg" />
+      <span class="username">eg:Ali</span>
+      <p class="post-time">eg:Ali posted on 12/05/2020 00:07:54</p>
+    </div>
+    <div class="content">eg:111</div>
+    <span class="the_del">X</span>    # designed for delete the post
+  </li>
+
+  <script>
+
+    let dataArr = [
+      { uname: 'Adam', imgSrc: './images/9.5/01.jpg' },
+      { uname: 'Bob', imgSrc: './images/9.5/02.jpg' },
+      { uname: 'Charlie', imgSrc: './images/9.5/03.jpg' },
+      { uname: 'David', imgSrc: './images/9.5/04.jpg' },
+      { uname: 'Emma', imgSrc: './images/9.5/05.jpg' },
+      { uname: 'Fiona', imgSrc: './images/9.5/06.jpg' },
+      { uname: 'Greg', imgSrc: './images/9.5/07.jpg' },
+      { uname: 'Henry', imgSrc: './images/9.5/08.jpg' },
+      { uname: 'Ivan', imgSrc: './images/9.5/09.jpg' },
+      { uname: 'Jorge', imgSrc: './images/9.5/10.jpg' },
+      { uname: 'Kevin', imgSrc: './images/9.5/11.jpg' },
+      { uname: 'Laura', imgSrc: './images/9.5/12.jpg' },
+      { uname: 'Mia', imgSrc: './images/9.5/13.jpg' },
+      { uname: 'Nick', imgSrc: './images/9.5/14.jpg' },
+      { uname: 'Oliver', imgSrc: './images/9.5/15.jpg' },
+      { uname: 'Peter', imgSrc: './images/9.5/16.jpg' },
+      { uname: 'Quinn', imgSrc: './images/9.5/17.jpg' },
+      { uname: 'Rebecca', imgSrc: './images/9.5/18.jpg' },
+      { uname: 'Sam', imgSrc: './images/9.5/19.jpg' },
+      { uname: 'Tony', imgSrc: './images/9.5/20.jpg' },
+      { uname: 'Victoria', imgSrc: './images/9.5/21.jpg' },
+      { uname: 'Will', imgSrc: './images/9.5/22.jpg' },
+    ]
+    // Request 1：show the word count of the post
+    //   1. add input event
+    //   2. assign the length of content to useCount 
+    //   3. limit the maxlength within 200 (realized when set the teatarea attributes)
+    let textarea = document.querySelector('textarea')
+    let useCount = document.querySelector('.useCount')
+    // post button
+    let post = document.querySelector('#post')
+    // ul
+    let ul = document.querySelector('#list')
+    // as input, the use Count changes to show current word counts
+    textarea.addEventListener('input', function () {
+      // console.log(this.value.length)
+      useCount.innerHTML = this.value.length
+    })
+
+    // Request 2： No be empty input
+    //   Determine if '' once post button clicked
+    //   if empty input, alert and return
+    //      reset the textarea vlaue to ''
+    //      set the useCount to zero the same time
+        //    tip, function: str.trim() to remove the ' ' before and after 
+    post.addEventListener('click', function () {
+      if (textarea.value.trim() === '') {
+        //   reset the textarea vlaue to ''
+        textarea.value = ''
+        //   set the useCount to zero the same time
+        useCount.innerHTML = 0
+        // alert user not to post empty reply
+        return alert('Pleae do not post empty reply.')
+      }
+      // random function(remmeber this or save it to a easy access place to use)
+      function getRandom(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min
+      }
+      let random = getRandom(0, dataArr.length - 1)
+      // Request 3：   New comment 
+      // Create element li, format data in the li.innerHTML 
+      let li = document.createElement('li')
+      // No real user post, we randomly get user info from arr, replace avatar and name, along with our post 
+      li.innerHTML = `
+       <div class="info">
+      <img class="userpic" src=${dataArr[random].imgSrc}>
+      <span class="username">${dataArr[random].uname}</span>
+      <p class="post-time"> ${new Date().toLocaleString()} </p>   // remember the new Date(): get the current time and date
+      </div>
+      <div class="content">${textarea.value}</div>
+      <span class="the_del">X</span>
+      `
+
+      // Request 4：function of deleting own posts
+      let del = li.querySelector('.the_del')
+      del.addEventListener('click', function () {
+        ul.removeChild(li)
+      })
+
+      //  parent.insertBefore(parent.children[0]) insert the 
+      ul.insertBefore(li, ul.children[0])
+      // Request 5：Reset
+      textarea.value = ''
+      useCount.innerHTML = 0
+
+    })
+  </script>
+
+</body>
+
+</html>
